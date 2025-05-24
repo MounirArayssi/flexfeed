@@ -1,5 +1,4 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -10,13 +9,11 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
     useColorScheme,
 } from "react-native";
 import { db } from "../../firebase"; // Adjust if your path is different
 
-// Sample stories
 const stories = [
   { id: "1", avatar: "https://randomuser.me/api/portraits/women/24.jpg", username: "Sarah", streak: true },
   { id: "2", avatar: "https://randomuser.me/api/portraits/men/18.jpg", username: "Ali", streak: false },
@@ -33,13 +30,11 @@ const categoryColors: Record<string, string> = {
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
-  const router = useRouter();
 
   const [feed, setFeed] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load feed (your flexes)
   useEffect(() => {
     setLoading(true);
     const flexesQuery = query(
@@ -62,10 +57,6 @@ export default function HomeScreen() {
     setTimeout(() => setRefreshing(false), 500);
   };
 
-  const handleLogWin = () => {
-    router.push("/logwin");
-  };
-
   return (
     <View style={[styles.container, colorScheme === "dark" && styles.containerDark]}>
       {/* --- Stories / Streaks --- */}
@@ -86,15 +77,6 @@ export default function HomeScreen() {
           </View>
         ))}
       </ScrollView>
-
-      {/* --- Weekly Stats Banner --- */}
-      <View style={styles.statsBanner}>
-        <Ionicons name="stats-chart" size={22} color="#76ABFF" style={{ marginRight: 5 }} />
-        <Text style={styles.statsText}>3 flexes · 6 days streak · +13 reactions</Text>
-        <TouchableOpacity>
-          <Text style={styles.statsView}>View</Text>
-        </TouchableOpacity>
-      </View>
 
       {/* --- Feed --- */}
       {loading ? (
@@ -141,32 +123,27 @@ export default function HomeScreen() {
                 <Image source={{ uri: item.image }} style={styles.flexImage} />
               ) : null}
               <View style={styles.reactionBar}>
-                <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <Ionicons name="heart-outline" size={21} color="#ED5A6B" style={{ marginRight: 3 }} />
                   <Text style={styles.reactionCount}>{item.reactions?.heart || 0}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <MaterialCommunityIcons name="fire" size={20} color="#F59C1D" style={{ marginRight: 3 }} />
                   <Text style={styles.reactionCount}>{item.reactions?.fire || 0}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <Ionicons name="hand-left-outline" size={19} color="#44C9B6" style={{ marginRight: 3 }} />
                   <Text style={styles.reactionCount}>{item.reactions?.clap || 0}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <Ionicons name="chatbubble-outline" size={19} color="#42527E" style={{ marginRight: 3 }} />
                   <Text style={styles.reactionCount}>0</Text>
-                </TouchableOpacity>
+                </View>
               </View>
             </View>
           )}
         />
       )}
-
-      {/* --- Floating Action Button --- */}
-      <TouchableOpacity style={styles.fab} onPress={handleLogWin}>
-        <Ionicons name="add" size={32} color="white" />
-      </TouchableOpacity>
     </View>
   );
 }
@@ -175,12 +152,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F6F9FB" },
   containerDark: { backgroundColor: "#20223A" },
 
-  // Stories/avatars row
   storiesRow: {
-    paddingVertical: 10,
+    marginTop: 1,
+    paddingVertical: 25,
     paddingLeft: 12,
     backgroundColor: "transparent",
-    marginBottom: 8,
+    marginBottom: 16, 
   },
   storyBubble: {
     alignItems: "center",
@@ -216,28 +193,6 @@ const styles = StyleSheet.create({
     maxWidth: 56,
     fontWeight: "600",
   },
-
-  // Banner
-  statsBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#EAF3FF",
-    paddingHorizontal: 18,
-    paddingVertical: 11,
-    borderRadius: 15,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    marginTop: 2,
-    shadowColor: "#191970",
-    shadowOpacity: 0.07,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 5,
-    elevation: 1,
-  },
-  statsText: { fontSize: 15, color: "#42527E", flex: 1 },
-  statsView: { color: "#76ABFF", fontWeight: "600", marginLeft: 8 },
-
-  // Feed cards
   card: {
     backgroundColor: "#fff",
     borderRadius: 20,
@@ -261,21 +216,4 @@ const styles = StyleSheet.create({
   flexImage: { width: "100%", height: 180, borderRadius: 12, marginTop: 6 },
   reactionBar: { flexDirection: "row", gap: 24, marginTop: 7 },
   reactionCount: { marginLeft: 2, color: "#B0B7C3", fontSize: 14 },
-
-  fab: {
-    position: "absolute",
-    bottom: 28,
-    right: 24,
-    backgroundColor: "#ED5A6B",
-    borderRadius: 32,
-    width: 62,
-    height: 62,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 7,
-    shadowColor: "#ED5A6B",
-    shadowOpacity: 0.21,
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 9,
-  },
 });
