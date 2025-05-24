@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
 import {
     ActivityIndicator,
@@ -15,35 +15,20 @@ import {
 } from "react-native";
 import { auth } from "../firebase";
 
-export default function SignupScreen() {
+export default function LoginScreen() {
   const router = useRouter();
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSignup = async () => {
-    setError("");
-
-    if (!name || !email || !password || !confirm) {
-      setError("Please fill in all fields.");
-      return;
-    }
-
-    if (password !== confirm) {
-      setError("Passwords do not match.");
-      return;
-    }
-
+  const handleLogin = async () => {
     try {
       setLoading(true);
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName: name });
+      await signInWithEmailAndPassword(auth, email, password);
       router.replace("/home");
     } catch {
-      setError("Could not create account. Try again.");
+      setError("Email and/or Password are incorrect.");
     } finally {
       setLoading(false);
     }
@@ -56,18 +41,11 @@ export default function SignupScreen() {
     >
       <StatusBar barStyle="light-content" />
 
+      {/* Logo image */}
       <Image source={require("../assets/images/logo.png")} style={styles.logoImage} resizeMode="contain" />
-      <Text style={styles.logo}>Create Account</Text>
 
       <TextInput
-        placeholder="Full Name"
-        placeholderTextColor="#A9B4C2"
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Email"
+        placeholder="Username or Email"
         placeholderTextColor="#A9B4C2"
         value={email}
         onChangeText={setEmail}
@@ -83,29 +61,25 @@ export default function SignupScreen() {
         secureTextEntry
         style={styles.input}
       />
-      <TextInput
-        placeholder="Confirm Password"
-        placeholderTextColor="#A9B4C2"
-        value={confirm}
-        onChangeText={setConfirm}
-        secureTextEntry
-        style={styles.input}
-      />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <TouchableOpacity style={styles.signupBtn} onPress={handleSignup} disabled={loading}>
+      <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} disabled={loading}>
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.signupText}>Sign Up</Text>
+          <Text style={styles.loginText}>Log In</Text>
         )}
       </TouchableOpacity>
 
+      <TouchableOpacity onPress={() => router.push("/forgot")}>
+        <Text style={styles.forgot}>Forgot Password?</Text>
+      </TouchableOpacity>
+
       <View style={styles.bottom}>
-        <TouchableOpacity onPress={() => router.replace("/login")}>
+        <TouchableOpacity onPress={() => router.push("/signup")}>
           <Text style={styles.bottomText}>
-            Already have an account? <Text style={styles.bottomLink}>Log In</Text>
+            Don’t have an account? <Text style={styles.bottomLink}>Create New Account</Text>
           </Text>
         </TouchableOpacity>
       </View>
@@ -121,17 +95,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   logoImage: {
-    width: 100,
-    height: 100,
-    marginBottom: 12,
+    width: 150,
+    height: 150,
+    marginBottom: 14,
     alignSelf: "center",
   },
   logo: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: "bold",
     color: "#FFFFFF",
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: 28,
   },
   input: {
     backgroundColor: "rgba(255,255,255,0.05)",
@@ -144,17 +118,23 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     marginBottom: 16,
   },
-  signupBtn: {
+  loginBtn: {
     backgroundColor: "#76ABFF",
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: "center",
     marginBottom: 10,
   },
-  signupText: {
+  loginText: {
     color: "#FFFFFF",
     fontSize: 17,
     fontWeight: "bold",
+  },
+  forgot: {
+    color: "#76ABFF",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 6,
   },
   error: {
     color: "#FF7070",

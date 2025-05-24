@@ -1,31 +1,31 @@
+// Modern Instagram/Twitter/BeReal-style HomePage for FlexFeed
+
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
 import {
-    collection,
-    onSnapshot,
-    orderBy,
-    query,
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    useColorScheme,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
 } from "react-native";
 import { auth, db } from "../firebase";
 
-// Demo user (for avatar/profile only)
 const userAvatar = "https://randomuser.me/api/portraits/men/11.jpg";
 
-// Demo stories/streaks (you can connect these to Firestore later)
 const stories = [
   { id: "1", avatar: "https://randomuser.me/api/portraits/women/24.jpg", username: "Sarah", streak: true },
   { id: "2", avatar: "https://randomuser.me/api/portraits/men/18.jpg", username: "Ali", streak: false },
@@ -33,7 +33,6 @@ const stories = [
   { id: "4", avatar: "https://randomuser.me/api/portraits/women/22.jpg", username: "Jess", streak: true },
 ];
 
-// Category colors
 const categoryColors: Record<string, string> = {
   Study: "#6DC1E6",
   Fitness: "#65C18C",
@@ -49,7 +48,6 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // LIVE Firestore listener
   useEffect(() => {
     setLoading(true);
     const flexesQuery = query(
@@ -64,11 +62,9 @@ export default function HomeScreen() {
       setFeed(newFeed);
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
-  // Pull-to-refresh (just triggers re-render, Firestore is real-time)
   const onRefresh = () => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 500);
@@ -76,7 +72,7 @@ export default function HomeScreen() {
 
   const handleLogout = async () => {
     await signOut(auth);
-    router.replace("/login");
+    router.replace("/");
   };
 
   const handleLogWin = () => {
@@ -89,7 +85,7 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, colorScheme === "dark" && styles.containerDark]}>
-      {/* Sticky App Bar */}
+      {/* App Bar */}
       <View style={[styles.appBar, colorScheme === "dark" && styles.appBarDark]}>
         <Text style={styles.logo}>FlexFeed</Text>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -105,7 +101,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Stories / Streaks Row */}
+      {/* Stories / Streaks */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.streaksRow}>
         {stories.map(story => (
           <View key={story.id} style={styles.streakBubble}>
@@ -118,7 +114,7 @@ export default function HomeScreen() {
         ))}
       </ScrollView>
 
-      {/* "Your Week" Banner (placeholder) */}
+      {/* "Your Week" Banner */}
       <View style={styles.statsBanner}>
         <Ionicons name="stats-chart" size={22} color="#76ABFF" style={{ marginRight: 5 }} />
         <Text style={styles.statsText}>3 flexes · 6 days streak · +13 reactions</Text>
@@ -134,10 +130,23 @@ export default function HomeScreen() {
         <FlatList
           data={feed}
           keyExtractor={item => item.id}
-          style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#ED5A6B"
+            />
+          }
           contentContainerStyle={{ paddingBottom: 100 }}
+          ListEmptyComponent={
+            <View style={{ alignItems: "center", marginTop: 48 }}>
+              <Ionicons name="happy-outline" size={54} color="#B0B7C3" />
+              <Text style={{ color: "#B0B7C3", fontSize: 18, marginTop: 10 }}>
+                No flexes yet. Be the first to flex! 💪
+              </Text>
+            </View>
+          }
           renderItem={({ item }) => (
             <View style={[styles.card, colorScheme === "dark" && styles.cardDark]}>
               <View style={styles.cardHeader}>
@@ -155,8 +164,9 @@ export default function HomeScreen() {
                 </View>
               </View>
               <Text style={styles.caption}>{item.caption}</Text>
-              {item.image ? <Image source={{ uri: item.image }} style={styles.flexImage} /> : null}
-              {/* Reaction Bar (for now: display counts only) */}
+              {item.image ? (
+                <Image source={{ uri: item.image }} style={styles.flexImage} />
+              ) : null}
               <View style={styles.reactionBar}>
                 <TouchableOpacity style={{ flexDirection: "row", alignItems: "center" }}>
                   <Ionicons name="heart-outline" size={21} color="#ED5A6B" style={{ marginRight: 3 }} />
@@ -196,7 +206,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 18,
-    paddingTop: 54,
+    paddingTop: 36,
     paddingBottom: 10,
     backgroundColor: "#fff",
     borderBottomWidth: 0.5,
