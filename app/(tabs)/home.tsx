@@ -1,31 +1,22 @@
-// Modern Instagram/Twitter/BeReal-style HomePage for FlexFeed
-
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { signOut } from "firebase/auth";
-import {
-  collection,
-  onSnapshot,
-  orderBy,
-  query,
-} from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Image,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    useColorScheme,
 } from "react-native";
-import { auth, db } from "../firebase";
+import { db } from "../../firebase"; // Adjust if your path is different
 
-const userAvatar = "https://randomuser.me/api/portraits/men/11.jpg";
-
+// Sample stories
 const stories = [
   { id: "1", avatar: "https://randomuser.me/api/portraits/women/24.jpg", username: "Sarah", streak: true },
   { id: "2", avatar: "https://randomuser.me/api/portraits/men/18.jpg", username: "Ali", streak: false },
@@ -41,13 +32,14 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function HomeScreen() {
-  const router = useRouter();
   const colorScheme = useColorScheme();
+  const router = useRouter();
 
   const [feed, setFeed] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Load feed (your flexes)
   useEffect(() => {
     setLoading(true);
     const flexesQuery = query(
@@ -70,51 +62,32 @@ export default function HomeScreen() {
     setTimeout(() => setRefreshing(false), 500);
   };
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    router.replace("/");
-  };
-
   const handleLogWin = () => {
     router.push("/logwin");
   };
 
-  const handleProfile = () => {
-    router.push("/profile");
-  };
-
   return (
     <View style={[styles.container, colorScheme === "dark" && styles.containerDark]}>
-      {/* App Bar */}
-      <View style={[styles.appBar, colorScheme === "dark" && styles.appBarDark]}>
-        <Text style={styles.logo}>FlexFeed</Text>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity style={{ marginRight: 14 }}>
-            <Ionicons name="notifications-outline" size={24} color="#42527E" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleProfile}>
-            <Image source={{ uri: userAvatar }} style={styles.avatar} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogout} style={{ marginLeft: 6 }}>
-            <Ionicons name="log-out-outline" size={25} color="#ED5A6B" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Stories / Streaks */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.streaksRow}>
-        {stories.map(story => (
-          <View key={story.id} style={styles.streakBubble}>
-            <Image source={{ uri: story.avatar }} style={styles.streakAvatar} />
-            {story.streak && (
-              <MaterialCommunityIcons name="fire" size={18} color="#F59C1D" style={styles.streakFire} />
-            )}
-            <Text numberOfLines={1} style={styles.streakUsername}>{story.username}</Text>
+      {/* --- Stories / Streaks --- */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.storiesRow}
+      >
+        {stories.map((story) => (
+          <View key={story.id} style={styles.storyBubble}>
+            <View style={[styles.storyRing, story.streak && styles.storyRingActive]}>
+              <Image source={{ uri: story.avatar }} style={styles.storyAvatar} />
+              {story.streak && (
+                <MaterialCommunityIcons name="fire" size={15} color="#F59C1D" style={styles.storyFire} />
+              )}
+            </View>
+            <Text numberOfLines={1} style={styles.storyUsername}>{story.username}</Text>
           </View>
         ))}
       </ScrollView>
 
-      {/* "Your Week" Banner */}
+      {/* --- Weekly Stats Banner --- */}
       <View style={styles.statsBanner}>
         <Ionicons name="stats-chart" size={22} color="#76ABFF" style={{ marginRight: 5 }} />
         <Text style={styles.statsText}>3 flexes · 6 days streak · +13 reactions</Text>
@@ -123,7 +96,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Feed List */}
+      {/* --- Feed --- */}
       {loading ? (
         <ActivityIndicator size="large" color="#ED5A6B" style={{ marginTop: 40 }} />
       ) : (
@@ -190,7 +163,7 @@ export default function HomeScreen() {
         />
       )}
 
-      {/* Floating Action Button */}
+      {/* --- Floating Action Button --- */}
       <TouchableOpacity style={styles.fab} onPress={handleLogWin}>
         <Ionicons name="add" size={32} color="white" />
       </TouchableOpacity>
@@ -201,43 +174,50 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F6F9FB" },
   containerDark: { backgroundColor: "#20223A" },
-  appBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 18,
-    paddingTop: 36,
-    paddingBottom: 10,
-    backgroundColor: "#fff",
-    borderBottomWidth: 0.5,
-    borderColor: "#f2f2f2",
-    zIndex: 10,
-  },
-  appBarDark: { backgroundColor: "#181A28", borderColor: "#2D3147" },
-  logo: { fontWeight: "bold", fontSize: 29, color: "#42527E", letterSpacing: 1 },
-  avatar: { width: 36, height: 36, borderRadius: 18 },
-  streaksRow: {
-    paddingVertical: 8,
-    paddingLeft: 14,
+
+  // Stories/avatars row
+  storiesRow: {
+    paddingVertical: 10,
+    paddingLeft: 12,
     backgroundColor: "transparent",
     marginBottom: 8,
   },
-  streakBubble: {
+  storyBubble: {
     alignItems: "center",
-    marginRight: 20,
-    width: 56,
+    marginRight: 24,
+    width: 60,
     position: "relative",
   },
-  streakAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+  storyRing: {
+    borderRadius: 30,
+    borderWidth: 2.5,
+    borderColor: "#d4d7ee",
+    padding: 3,
     marginBottom: 2,
-    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  storyRingActive: {
     borderColor: "#F59C1D",
   },
-  streakFire: { position: "absolute", top: -8, right: -7, zIndex: 3 },
-  streakUsername: { fontSize: 12, color: "#42527E", marginTop: 2, textAlign: "center", maxWidth: 54 },
+  storyAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: "#fff",
+  },
+  storyFire: { position: "absolute", top: -7, right: -8, zIndex: 3 },
+  storyUsername: {
+    fontSize: 13,
+    color: "#42527E",
+    marginTop: 2,
+    textAlign: "center",
+    maxWidth: 56,
+    fontWeight: "600",
+  },
+
+  // Banner
   statsBanner: {
     flexDirection: "row",
     alignItems: "center",
@@ -256,6 +236,8 @@ const styles = StyleSheet.create({
   },
   statsText: { fontSize: 15, color: "#42527E", flex: 1 },
   statsView: { color: "#76ABFF", fontWeight: "600", marginLeft: 8 },
+
+  // Feed cards
   card: {
     backgroundColor: "#fff",
     borderRadius: 20,
@@ -279,6 +261,7 @@ const styles = StyleSheet.create({
   flexImage: { width: "100%", height: 180, borderRadius: 12, marginTop: 6 },
   reactionBar: { flexDirection: "row", gap: 24, marginTop: 7 },
   reactionCount: { marginLeft: 2, color: "#B0B7C3", fontSize: 14 },
+
   fab: {
     position: "absolute",
     bottom: 28,
